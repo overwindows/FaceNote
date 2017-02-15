@@ -367,7 +367,9 @@ def split_dataset(dataset, split_ratio, mode):
 
 def load_model(model_dir, meta_file, ckpt_file):
     model_dir_exp = os.path.expanduser(model_dir)
+    print( os.path.join(model_dir_exp, meta_file) )
     saver = tf.train.import_meta_graph(os.path.join(model_dir_exp, meta_file))
+    print(os.path.join(model_dir_exp, ckpt_file))
     saver.restore(tf.get_default_session(), os.path.join(model_dir_exp, ckpt_file))
     
 def get_model_filenames(model_dir):
