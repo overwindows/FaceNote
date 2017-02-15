@@ -6,6 +6,7 @@ Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://j
 
 ### Setup
 https://scipy.org/install.html
+
 pip install Pillow
 
 ### Training Data
