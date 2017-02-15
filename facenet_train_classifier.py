@@ -140,6 +140,7 @@ def main(args):
         print('Building training graph')
         
         # Build the inference graph
+        # print('Build the inference graph')
         prelogits, _ = network.inference(image_batch, args.keep_probability, 
             phase_train=phase_train_placeholder, weight_decay=args.weight_decay)
         logits = slim.fully_connected(prelogits, len(train_set), activation_fn=None, 
@@ -150,6 +151,7 @@ def main(args):
         embeddings = tf.nn.l2_normalize(prelogits, 1, 1e-10, name='embeddings')
 
         # Add center loss
+        # print('Add center loss')
         if args.center_loss_factor>0.0:
             prelogits_center_loss, _ = facenet.center_loss(prelogits, label_batch, args.center_loss_alfa, nrof_classes)
             tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, prelogits_center_loss * args.center_loss_factor)
@@ -159,16 +161,19 @@ def main(args):
         tf.summary.scalar('learning_rate', learning_rate)
 
         # Calculate the average cross entropy loss across the batch
+        # print('Calculate the average cross entropy loss across the batch')
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits, label_batch, name='cross_entropy_per_example')
         cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
         tf.add_to_collection('losses', cross_entropy_mean)
         
         # Calculate the total losses
+        # print('Calculate the total losses')
         regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         total_loss = tf.add_n([cross_entropy_mean] + regularization_losses, name='total_loss')
 
         # Build a Graph that trains the model with one batch of examples and updates the model parameters
+        # print('Build a Graph that trains the model with one batch of examples and updates the model parameters')
         train_op = facenet.train(total_loss, global_step, args.optimizer, 
             learning_rate, args.moving_average_decay, tf.global_variables(), args.log_histograms)
         
@@ -176,11 +181,14 @@ def main(args):
         saver = tf.train.Saver(tf.global_variables(), max_to_keep=3)
 
         # Build the summary operation based on the TF collection of Summaries.
+        # print('Build the summary operation based on the TF collection of Summaries.')
         summary_op = tf.summary.merge_all()
 
         # Start running operations on the Graph.
+        # print('Start running operations on the Graph.')
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpu_memory_fraction)
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+        #sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1, intra_op_parallelism_threads=1))
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())
         summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
@@ -267,11 +275,13 @@ def train(args, sess, epoch, image_list, label_list, enqueue_op, image_paths_pla
         image_epoch += image_list[0:nrof_examples_per_epoch-(nrof_examples-j)]
     
     # Enqueue one epoch of image paths and labels
+    # print('Enqueue one epoch of image paths and labels')
     labels_array = np.expand_dims(np.array(label_epoch),1)
     image_paths_array = np.expand_dims(np.array(image_epoch),1)
     sess.run(enqueue_op, {image_paths_placeholder: image_paths_array, labels_placeholder: labels_array})
 
     # Training loop
+    # print('Training loop')
     train_time = 0
     while batch_number < args.epoch_size:
         start_time = time.time()
@@ -369,7 +379,7 @@ def parse_arguments(argv):
         help='Path to the data directory containing aligned face patches. Multiple directories are separated with colon.',
         default='~/datasets/facescrub/fs_aligned:~/datasets/casia/casia-webface-aligned')
     parser.add_argument('--model_def', type=str,
-        help='Model definition. Points to a module containing the definition of the inference graph.', default='models.nn4')
+        help='Model definition. Points to a module containing the definition of the inference graph.', default='nn4')
     parser.add_argument('--max_nrof_epochs', type=int,
         help='Number of epochs to run.', default=500)
     parser.add_argument('--batch_size', type=int,
