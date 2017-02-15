@@ -7,7 +7,7 @@ import hashlib
 import cv2
 
 
-files = ['facescrub_actors.txt', 'facescrub_actresses.txt']
+files = ['./data/facescrub_actors.txt', './data/facescrub_actresses.txt']
 RESULT_ROOT = '../datasets/facescrub'
 if not exists(RESULT_ROOT):
     os.mkdir(RESULT_ROOT)
