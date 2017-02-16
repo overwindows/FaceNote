@@ -4,7 +4,9 @@ This Project focus on computer vision and artificial intelligence for image enha
 
 The project has three components
 1. Face detect and search validation
+
 2. Image aesthetics analysis and rating
+
 3. Image auto-enhancement based on aesthetics analysis
 
 ### Setup
