@@ -1,0 +1,3 @@
+model_checkpoint_path: "model-20170215-191128.ckpt-100"
+all_model_checkpoint_paths: "model-20170215-191128.ckpt-0"
+all_model_checkpoint_paths: "model-20170215-191128.ckpt-100"
