@@ -9,28 +9,44 @@ The project has three components
 
 ### Setup
 Python 2.7
+
 OpenCV 2.4
+
 Tensorflow R1
+
 sklearn
+
 pil
+
 and other relative dependency
 
 ###For example
-`pip install tensorflow -- upgrade`
-`pip install numpy scipy matplotlib ipython jupyter pandas sympy nose`
-`pip install pillow`
-`pip install sklearn`
+```
+pip install tensorflow -- upgrade
+
+pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
+
+pip install pillow
+
+pip install sklearn
+```
 
 ## Face
 
 ### Download Training Data
-`python facescrub_download.py`
+```
+python facescrub_download.py
+```
 
 ### Align Images
-`python align_dataset_mtcnn.py ~/datasets/lfw/ ~/datasets/lfw_mtcnnalign_160 --image_size 160 --margin 32`
+```
+python align_dataset_mtcnn.py ~/datasets/lfw/ ~/datasets/lfw_mtcnnalign_160 --image_size 160 --margin 32
+```
 
 ### Training classifier
-`python facenet_train_classifier.py --logs_base_dir ~/logs/facenet/ --models_base_dir ~/models/facenet/ --data_dir ~/datasets/facescrub/facescrub_mtcnnpy_182 --image_size 160 --model_def models.inception_resnet_v1 --batch_size 10 --lfw_dir  ~/datasets/lfw/lfw_mtcnnalign_160 --optimizer RMSPROP --learning_rate -1 --max_nrof_epochs 80 --keep_probability 0.8 --random_crop --random_flip --learning_rate_schedule_file ../data/learning_rate_schedule_classifier.txt --weight_decay 5e-5 --center_loss_factor 1e-4 --center_loss_alfa 0.9`
+```
+python facenet_train_classifier.py --logs_base_dir ~/logs/facenet/ --models_base_dir ~/models/facenet/ --data_dir ~/datasets/facescrub/facescrub_mtcnnpy_182 --image_size 160 --model_def models.inception_resnet_v1 --batch_size 10 --lfw_dir  ~/datasets/lfw/lfw_mtcnnalign_160 --optimizer RMSPROP --learning_rate -1 --max_nrof_epochs 80 --keep_probability 0.8 --random_crop --random_flip --learning_rate_schedule_file ../data/learning_rate_schedule_classifier.txt --weight_decay 5e-5 --center_loss_factor 1e-4 --center_loss_alfa 0.9
+```
 
 ### Image Embedding
 
