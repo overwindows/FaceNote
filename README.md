@@ -45,7 +45,7 @@ python facescrub_download.py
 ### Align Images
 ```
 python align_dataset_mtcnn.py ~/datasets/lfw/ ~/datasets/lfw_mtcnnalign_160 --image_size 160 --margin 32
-python align_dataset_mtcnn.py  ~/datasets/facescrub/ ~/datasets/facescrub_mtcnnpy_182 --image_size 182 --margin 44
+python align_dataset_mtcnn.py ~/datasets/facescrub/ ~/datasets/facescrub_mtcnnpy_182 --image_size 182 --margin 44
 ```
 
 ### Training classifier
