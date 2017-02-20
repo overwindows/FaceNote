@@ -389,17 +389,19 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
     assert(embeddings1.shape[1] == embeddings2.shape[1])
     nrof_pairs = min(len(actual_issame), embeddings1.shape[0])
     nrof_thresholds = len(thresholds)
-    folds = KFold(n=nrof_pairs, n_folds=nrof_folds, shuffle=False)
-    
+    #folds = KFold(n=nrof_pairs, n_folds=nrof_folds, shuffle=False)
+    k_fold = KFold(n_splits=nrof_folds, shuffle=False)
+
     tprs = np.zeros((nrof_folds,nrof_thresholds))
     fprs = np.zeros((nrof_folds,nrof_thresholds))
     accuracy = np.zeros((nrof_folds))
     
     diff = np.subtract(embeddings1, embeddings2)
     dist = np.sum(np.square(diff),1)
+    indices = np.arange(nrof_pairs)
     
-    for fold_idx, (train_set, test_set) in enumerate(folds):
-        
+#   for fold_idx, (train_set, test_set) in enumerate(folds):
+    for fold_idx, (train_set, test_set) in enumerate(k_fold.split(indices)):        
         # Find the best threshold for the fold
         acc_train = np.zeros((nrof_thresholds))
         for threshold_idx, threshold in enumerate(thresholds):
@@ -440,16 +442,19 @@ def calculate_val(thresholds, embeddings1, embeddings2, actual_issame, far_targe
     assert(embeddings1.shape[1] == embeddings2.shape[1])
     nrof_pairs = min(len(actual_issame), embeddings1.shape[0])
     nrof_thresholds = len(thresholds)
-    folds = KFold(n=nrof_pairs, n_folds=nrof_folds, shuffle=False)
-    
+    #folds = KFold(n=nrof_pairs, n_folds=nrof_folds, shuffle=False)
+    k_fold = KFold(n_splits=nrof_folds, shuffle=False)
+
     val = np.zeros(nrof_folds)
     far = np.zeros(nrof_folds)
     
     diff = np.subtract(embeddings1, embeddings2)
     dist = np.sum(np.square(diff),1)
-    
-    for fold_idx, (train_set, test_set) in enumerate(folds):
-      
+    indices = np.arange(nrof_pairs)
+ 
+#   for fold_idx, (train_set, test_set) in enumerate(folds):
+    for fold_idx, (train_set, test_set) in enumerate(k_fold.split(indices)):
+  
         # Find the threshold that gives FAR = far_target
         far_train = np.zeros(nrof_thresholds)
         for threshold_idx, threshold in enumerate(thresholds):
