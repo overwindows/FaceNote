@@ -21,10 +21,13 @@ from oss2.models import PartInfo
 #   http://oss-cn-hangzhou.aliyuncs.com
 #   https://oss-cn-hangzhou.aliyuncs.com
 # 分别以HTTP、HTTPS协议访问。
+oss_internal = 'http://oss-cn-hangzhou-internal.aliyuncs.com'
+oss_external = 'http://oss-cn-hangzhou.aliyuncs.com'
+
 access_key_id = os.getenv('OSS_TEST_ACCESS_KEY_ID', 'cuRku5y77efvgqHn')
 access_key_secret = os.getenv('OSS_TEST_ACCESS_KEY_SECRET', '195yj5K996wrGTQsoa6f3Pwbuk1CwE')
 bucket_name = os.getenv('OSS_TEST_BUCKET', 'haitajia2015log')
-endpoint = os.getenv('OSS_TEST_ENDPOINT', 'http://oss-cn-hangzhou-internal.aliyuncs.com')
+endpoint = os.getenv('OSS_TEST_ENDPOINT', oss_internal)
 
 
 # 确认上面的参数都填写正确了
@@ -75,7 +78,7 @@ def main(args):
 def percentage(consumed_bytes, total_bytes):
     if total_bytes:
         rate = int(100 * (float(consumed_bytes) / float(total_bytes)))
-        print('\r{0}% '.format(rate))
+        sys.stdout.write('\r{0}% '.format(rate))
         sys.stdout.flush()
 
 def calculate_file_md5(file_name, block_size=64 * 1024):
