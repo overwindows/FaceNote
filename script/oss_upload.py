@@ -69,9 +69,9 @@ def main(args):
     print('Complete the uploading task:')
     bucket.complete_multipart_upload(key, upload_id, parts)
 
-    print('Verification the file size:')
-    bucket.put_object_from_file(key, filename, headers={'Content-MD5': encode_md5})
 
+    result  = bucket.complete_multipart_upload(key, upload_id, parts)
+    print('upload results: %i' % result)
     print ('upload complete with the file %s' % key)
 
 
