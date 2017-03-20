@@ -117,9 +117,11 @@ def parse_arguments(argv):
     
     parser.add_argument('model_dir', type=str, 
         help='Directory containing the meta_file and ckpt_file')
-    parser.add_argument('image_files', type=str, nargs='+', help='Images to compare')
+    parser.add_argument('--dlib_face_predictor', type=str,
+    help='File containing the dlib face predictor.', default='../data/shape_predictor_68_face_landmarks.dat')
     parser.add_argument('--image_size', type=int,
         help='Image size (height, width) in pixels.', default=160)
+    parser.add_argument('image_files', type=str, nargs='+', help='Images to compare')
     parser.add_argument('--margin', type=int,
         help='Margin for the crop around the bounding box (height, width) in pixels.', default=44)
     parser.add_argument('--gpu_memory_fraction', type=float,

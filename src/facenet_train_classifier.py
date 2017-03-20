@@ -38,13 +38,15 @@ import importlib
 import argparse
 import facenet
 import lfw
+import h5py
 import tensorflow.contrib.slim as slim
 from tensorflow.python.ops import data_flow_ops
-import h5py
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import array_ops
 
 def main(args):
   
-    network = importlib.import_module(args.model_def, 'inference')
+    network = importlib.import_module(args.model_def)
 
     subdir = datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S')
     log_dir = os.path.join(os.path.expanduser(args.logs_base_dir), subdir)
@@ -55,7 +57,7 @@ def main(args):
         os.makedirs(model_dir)
 
     # Store some git revision info in a text file in the log directory
-    src_path,_ = os.path.split(os.path.realpath(__file__))
+    # src_path,_ = os.path.split(os.path.realpath(__file__))
     # facenet.store_revision_info(src_path, log_dir, ' '.join(sys.argv))
 
     np.random.seed(seed=args.seed)
@@ -86,8 +88,16 @@ def main(args):
         
         # Get a list of image paths and their labels
         image_list, label_list = facenet.get_image_paths_and_labels(train_set)
-        image_list, label_list = facenet.shuffle_examples(image_list, label_list)
-
+        assert len(image_list)>0, 'The dataset should not be empty'
+        
+        # Create a queue that produces indices into the image_list and label_list 
+        labels = ops.convert_to_tensor(label_list, dtype=tf.int32)
+        range_size = array_ops.shape(labels)[0]
+        index_queue = tf.train.range_input_producer(range_size, num_epochs=None,
+                             shuffle=True, seed=None, capacity=32)
+        
+        index_dequeue_op = index_queue.dequeue_many(args.batch_size*args.epoch_size, 'index_dequeue')
+        
         learning_rate_placeholder = tf.placeholder(tf.float32, name='learning_rate')
 
         batch_size_placeholder = tf.placeholder(tf.int32, name='batch_size')
@@ -110,7 +120,6 @@ def main(args):
             filenames, label = input_queue.dequeue()
             images = []
             for filename in tf.unstack(filenames):
-            #for filename in tf.unpack(filenames):
                 file_contents = tf.read_file(filename)
                 image = tf.image.decode_png(file_contents)
                 if args.random_rotate:
@@ -133,6 +142,7 @@ def main(args):
             capacity=4 * nrof_preprocess_threads * args.batch_size,
             allow_smaller_final_batch=True)
         image_batch = tf.identity(image_batch, 'image_batch')
+        image_batch = tf.identity(image_batch, 'input')
         label_batch = tf.identity(label_batch, 'label_batch')
         
         print('Total number of classes: %d' % nrof_classes)
@@ -140,16 +150,34 @@ def main(args):
         
         print('Building training graph')
         
+        batch_norm_params = {
+            # Decay for the moving averages
+            'decay': 0.995,
+            # epsilon to prevent 0s in variance
+            'epsilon': 0.001,
+            # force in-place updates of mean and variance estimates
+            'updates_collections': None,
+            # Moving averages ends up in the trainable variables collection
+            'variables_collections': [ tf.GraphKeys.TRAINABLE_VARIABLES ],
+            # Only update statistics during training mode
+            'is_training': phase_train_placeholder
+        }
         # Build the inference graph
         # print('Build the inference graph')
         prelogits, _ = network.inference(image_batch, args.keep_probability, 
             phase_train=phase_train_placeholder, weight_decay=args.weight_decay)
-        logits = slim.fully_connected(prelogits, len(train_set), activation_fn=None, 
+        bottleneck = slim.fully_connected(prelogits, args.embedding_size, activation_fn=None, 
+                weights_initializer=tf.truncated_normal_initializer(stddev=0.1), 
+                weights_regularizer=slim.l2_regularizer(args.weight_decay),
+                normalizer_fn=slim.batch_norm,
+                normalizer_params=batch_norm_params,
+                scope='Bottleneck', reuse=False)
+        logits = slim.fully_connected(bottleneck, len(train_set), activation_fn=None, 
                 weights_initializer=tf.truncated_normal_initializer(stddev=0.1), 
                 weights_regularizer=slim.l2_regularizer(args.weight_decay),
                 scope='Logits', reuse=False)
 
-        embeddings = tf.nn.l2_normalize(prelogits, 1, 1e-10, name='embeddings')
+        embeddings = tf.nn.l2_normalize(bottleneck, 1, 1e-10, name='embeddings')
 
         # Add center loss
         # print('Add center loss')
@@ -164,7 +192,7 @@ def main(args):
         # Calculate the average cross entropy loss across the batch
         # print('Calculate the average cross entropy loss across the batch')
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            logits=logits, labels=label_batch, name='cross_entropy_per_example')
+            labels=label_batch, logits=logits, name='cross_entropy_per_example')
         cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
         tf.add_to_collection('losses', cross_entropy_mean)
         
@@ -179,7 +207,7 @@ def main(args):
             learning_rate, args.moving_average_decay, tf.global_variables(), args.log_histograms)
         
         # Create a saver
-        saver = tf.train.Saver(tf.global_variables(), max_to_keep=3)
+        saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=3)
 
         # Build the summary operation based on the TF collection of Summaries.
         # print('Build the summary operation based on the TF collection of Summaries.')
@@ -193,7 +221,8 @@ def main(args):
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())
         summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
-        tf.train.start_queue_runners(sess=sess)
+        coord = tf.train.Coordinator()
+        tf.train.start_queue_runners(coord=coord, sess=sess)
 
         with sess.as_default():
 
@@ -208,7 +237,7 @@ def main(args):
                 step = sess.run(global_step, feed_dict=None)
                 epoch = step // args.epoch_size
                 # Train for one epoch
-                train(args, sess, epoch, image_list, label_list, enqueue_op, image_paths_placeholder, labels_placeholder,
+                train(args, sess, epoch, image_list, label_list, index_dequeue_op, enqueue_op, image_paths_placeholder, labels_placeholder,
                     learning_rate_placeholder, phase_train_placeholder, batch_size_placeholder, global_step, 
                     total_loss, train_op, summary_op, summary_writer, regularization_losses, args.learning_rate_schedule_file)
 
@@ -219,6 +248,7 @@ def main(args):
                 if args.lfw_dir:
                     evaluate(sess, enqueue_op, image_paths_placeholder, labels_placeholder, phase_train_placeholder, batch_size_placeholder, 
                         embeddings, label_batch, lfw_paths, actual_issame, args.lfw_batch_size, args.lfw_nrof_folds, log_dir, step, summary_writer)
+    sess.close()
     return model_dir
   
 def find_threshold(var, percentile):
@@ -252,7 +282,7 @@ def filter_dataset(dataset, data_filename, percentile, min_nrof_images_per_class
 
     return filtered_dataset
   
-def train(args, sess, epoch, image_list, label_list, enqueue_op, image_paths_placeholder, labels_placeholder, 
+def train(args, sess, epoch, image_list, label_list, index_dequeue_op, enqueue_op, image_paths_placeholder, labels_placeholder, 
       learning_rate_placeholder, phase_train_placeholder, batch_size_placeholder, global_step, 
       loss, train_op, summary_op, summary_writer, regularization_losses, learning_rate_schedule_file):
     batch_number = 0
@@ -262,18 +292,9 @@ def train(args, sess, epoch, image_list, label_list, enqueue_op, image_paths_pla
     else:
         lr = facenet.get_learning_rate_from_file(learning_rate_schedule_file, epoch)
 
-    nrof_examples = len(image_list)
-    nrof_examples_per_epoch = args.epoch_size*args.batch_size
-    j = epoch*nrof_examples_per_epoch % nrof_examples
-    if j+args.epoch_size*args.batch_size<=nrof_examples:
-        label_epoch = label_list[j:j+nrof_examples_per_epoch]
-        image_epoch = image_list[j:j+nrof_examples_per_epoch]
-    else:
-        label_epoch = label_list[j:nrof_examples] 
-        image_epoch = image_list[j:nrof_examples]
-        image_list, label_list = facenet.shuffle_examples(image_list, label_list)
-        label_epoch += label_list[0:nrof_examples_per_epoch-(nrof_examples-j)]
-        image_epoch += image_list[0:nrof_examples_per_epoch-(nrof_examples-j)]
+    index_epoch = sess.run(index_dequeue_op)
+    label_epoch = np.array(label_list)[index_epoch]
+    image_epoch = np.array(image_list)[index_epoch]
     
     # Enqueue one epoch of image paths and labels
     # print('Enqueue one epoch of image paths and labels')
@@ -317,6 +338,7 @@ def evaluate(sess, enqueue_op, image_paths_placeholder, labels_placeholder, phas
     
     embedding_size = embeddings.get_shape()[1]
     nrof_images = len(actual_issame)*2
+    assert nrof_images % batch_size == 0, 'The number of LFW images must be an integer multiple of the LFW batch size'
     nrof_batches = nrof_images // batch_size
     emb_array = np.zeros((nrof_images, embedding_size))
     lab_array = np.zeros((nrof_images,))
@@ -380,7 +402,7 @@ def parse_arguments(argv):
         help='Path to the data directory containing aligned face patches. Multiple directories are separated with colon.',
         default='~/datasets/facescrub/fs_aligned:~/datasets/casia/casia-webface-aligned')
     parser.add_argument('--model_def', type=str,
-        help='Model definition. Points to a module containing the definition of the inference graph.', default='nn4')
+        help='Model definition. Points to a module containing the definition of the inference graph.', default='models.nn4')
     parser.add_argument('--max_nrof_epochs', type=int,
         help='Number of epochs to run.', default=500)
     parser.add_argument('--batch_size', type=int,
@@ -389,6 +411,8 @@ def parse_arguments(argv):
         help='Image size (height, width) in pixels.', default=96)
     parser.add_argument('--epoch_size', type=int,
         help='Number of batches per epoch.', default=1000)
+    parser.add_argument('--embedding_size', type=int,
+        help='Dimensionality of the embedding.', default=128)
     parser.add_argument('--random_crop', 
         help='Performs random cropping of training images. If false, the center image_size pixels from the training images are used. ' +
          'If the size of the images in the data directory is equal to image_size no cropping is performed', action='store_true')

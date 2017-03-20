@@ -55,10 +55,10 @@ def triplet_loss(anchor, positive, negative, alpha):
       the triplet loss according to the FaceNet paper as a float tensor.
     """
     with tf.variable_scope('triplet_loss'):
-        pos_dist = tf.reduce_sum(tf.square(tf.sub(anchor, positive)), 1)
-        neg_dist = tf.reduce_sum(tf.square(tf.sub(anchor, negative)), 1)
+        pos_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, positive)), 1)
+        neg_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, negative)), 1)
         
-        basic_loss = tf.add(tf.sub(pos_dist,neg_dist), alpha)
+        basic_loss = tf.add(tf.subtract(pos_dist,neg_dist), alpha)
         loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0)
       
     return loss
@@ -70,7 +70,7 @@ def decov_loss(xs):
     x = tf.reshape(xs, [int(xs.get_shape()[0]), -1])
     m = tf.reduce_mean(x, 0, True)
     z = tf.expand_dims(x-m, 2)
-    corr = tf.reduce_mean(tf.batch_matmul(z, tf.transpose(z, perm=[0,2,1])), 0)
+    corr = tf.reduce_mean(tf.matmul(z, tf.transpose(z, perm=[0,2,1])), 0)
     corr_frob_sqr = tf.reduce_sum(tf.square(corr))
     corr_diag_sqr = tf.reduce_sum(tf.square(tf.diag_part(corr)))
     loss = 0.5*(corr_frob_sqr - corr_diag_sqr)
@@ -233,8 +233,8 @@ def prewhiten(x):
 
 def crop(image, random_crop, image_size):
     if image.shape[1]>image_size:
-        sz1 = image.shape[1]//2
-        sz2 = image_size//2
+        sz1 = int(image.shape[1]//2)
+        sz2 = int(image_size//2)
         if random_crop:
             diff = sz1-sz2
             (h, v) = (np.random.randint(-diff, diff+1), np.random.randint(-diff, diff+1))
@@ -342,6 +342,19 @@ def get_dataset(paths):
   
     return dataset
 
+def get_folder_file(paths):
+    file_lists = []
+    for path in paths.split(':'):
+        path_exp = os.path.expanduser(path)
+        list = os.listdir(path_exp)
+        nrof_lists = len(list)
+        for i in range(nrof_lists):
+            f_name = list[i]
+            image_paths = os.path.join(path_exp, f_name)
+            file_lists.append(image_paths)
+#            folder[i] = os.path.join(path_exp, classes_name)
+    return file_lists
+
 def split_dataset(dataset, split_ratio, mode):
     if mode=='SPLIT_CLASSES':
         nrof_classes = len(dataset)
@@ -368,9 +381,7 @@ def split_dataset(dataset, split_ratio, mode):
 
 def load_model(model_dir, meta_file, ckpt_file):
     model_dir_exp = os.path.expanduser(model_dir)
-    print( os.path.join(model_dir_exp, meta_file) )
     saver = tf.train.import_meta_graph(os.path.join(model_dir_exp, meta_file))
-    print(os.path.join(model_dir_exp, ckpt_file))
     saver.restore(tf.get_default_session(), os.path.join(model_dir_exp, ckpt_file))
     
 def get_model_filenames(model_dir):
@@ -381,7 +392,15 @@ def get_model_filenames(model_dir):
     elif len(meta_files)>1:
         raise ValueError('There should not be more than one meta file in the model directory (%s)' % model_dir)
     meta_file = meta_files[0]
-    ckpt_file = tf.train.get_checkpoint_state(model_dir).model_checkpoint_path
+    meta_files = [s for s in files if '.ckpt' in s]
+    max_step = -1
+    for f in files:
+        step_str = re.match(r'(^model-[\w\- ]+.ckpt-(\d+))', f)
+        if step_str is not None and len(step_str.groups())>=2:
+            step = int(step_str.groups()[1])
+            if step > max_step:
+                max_step = step
+                ckpt_file = step_str.groups()[0]
     return meta_file, ckpt_file
 
 def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_folds=10):
@@ -389,7 +408,6 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
     assert(embeddings1.shape[1] == embeddings2.shape[1])
     nrof_pairs = min(len(actual_issame), embeddings1.shape[0])
     nrof_thresholds = len(thresholds)
-    #folds = KFold(n=nrof_pairs, n_folds=nrof_folds, shuffle=False)
     k_fold = KFold(n_splits=nrof_folds, shuffle=False)
 
     tprs = np.zeros((nrof_folds,nrof_thresholds))
@@ -400,17 +418,19 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
     dist = np.sum(np.square(diff),1)
     indices = np.arange(nrof_pairs)
     
-#   for fold_idx, (train_set, test_set) in enumerate(folds):
-    for fold_idx, (train_set, test_set) in enumerate(k_fold.split(indices)):        
+    for fold_idx, (train_set, test_set) in enumerate(k_fold.split(indices)):
+        
         # Find the best threshold for the fold
         acc_train = np.zeros((nrof_thresholds))
         for threshold_idx, threshold in enumerate(thresholds):
             _, _, acc_train[threshold_idx] = calculate_accuracy(threshold, dist[train_set], actual_issame[train_set])
         best_threshold_index = np.argmax(acc_train)
+        best_threshold = thresholds[best_threshold_index]
+        print (best_threshold)
         for threshold_idx, threshold in enumerate(thresholds):
             tprs[fold_idx,threshold_idx], fprs[fold_idx,threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set])
         _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set])
-          
+
         tpr = np.mean(tprs,0)
         fpr = np.mean(fprs,0)
     return tpr, fpr, accuracy
@@ -442,7 +462,6 @@ def calculate_val(thresholds, embeddings1, embeddings2, actual_issame, far_targe
     assert(embeddings1.shape[1] == embeddings2.shape[1])
     nrof_pairs = min(len(actual_issame), embeddings1.shape[0])
     nrof_thresholds = len(thresholds)
-    #folds = KFold(n=nrof_pairs, n_folds=nrof_folds, shuffle=False)
     k_fold = KFold(n_splits=nrof_folds, shuffle=False)
 
     val = np.zeros(nrof_folds)
@@ -451,8 +470,7 @@ def calculate_val(thresholds, embeddings1, embeddings2, actual_issame, far_targe
     diff = np.subtract(embeddings1, embeddings2)
     dist = np.sum(np.square(diff),1)
     indices = np.arange(nrof_pairs)
- 
-#   for fold_idx, (train_set, test_set) in enumerate(folds):
+    
     for fold_idx, (train_set, test_set) in enumerate(k_fold.split(indices)):
   
         # Find the threshold that gives FAR = far_target

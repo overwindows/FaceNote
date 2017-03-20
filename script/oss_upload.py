@@ -67,10 +67,8 @@ def main(args):
 
     # 完成分片上传
     print('Complete the uploading task:')
-    bucket.complete_multipart_upload(key, upload_id, parts)
+    result = bucket.complete_multipart_upload(key, upload_id, parts)
 
-
-    result  = bucket.complete_multipart_upload(key, upload_id, parts)
     print('upload results: %i' % result)
     print ('upload complete with the file %s' % key)
 
