@@ -33,14 +33,11 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 import numpy as np
 from scipy import misc
-#import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
-#from sklearn.cross_validation import KFold
 from scipy import interpolate
 from tensorflow.python.training import training
 import random
-
-#import h5py
+import re
 
 
 def triplet_loss(anchor, positive, negative, alpha):
@@ -342,19 +339,6 @@ def get_dataset(paths):
   
     return dataset
 
-def get_folder_file(paths):
-    file_lists = []
-    for path in paths.split(':'):
-        path_exp = os.path.expanduser(path)
-        list = os.listdir(path_exp)
-        nrof_lists = len(list)
-        for i in range(nrof_lists):
-            f_name = list[i]
-            image_paths = os.path.join(path_exp, f_name)
-            file_lists.append(image_paths)
-#            folder[i] = os.path.join(path_exp, classes_name)
-    return file_lists
-
 def split_dataset(dataset, split_ratio, mode):
     if mode=='SPLIT_CLASSES':
         nrof_classes = len(dataset)
@@ -409,7 +393,7 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
     nrof_pairs = min(len(actual_issame), embeddings1.shape[0])
     nrof_thresholds = len(thresholds)
     k_fold = KFold(n_splits=nrof_folds, shuffle=False)
-
+    
     tprs = np.zeros((nrof_folds,nrof_thresholds))
     fprs = np.zeros((nrof_folds,nrof_thresholds))
     accuracy = np.zeros((nrof_folds))
@@ -425,12 +409,10 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
         for threshold_idx, threshold in enumerate(thresholds):
             _, _, acc_train[threshold_idx] = calculate_accuracy(threshold, dist[train_set], actual_issame[train_set])
         best_threshold_index = np.argmax(acc_train)
-        best_threshold = thresholds[best_threshold_index]
-        print (best_threshold)
         for threshold_idx, threshold in enumerate(thresholds):
             tprs[fold_idx,threshold_idx], fprs[fold_idx,threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set])
         _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set])
-
+          
         tpr = np.mean(tprs,0)
         fpr = np.mean(fprs,0)
     return tpr, fpr, accuracy
@@ -446,24 +428,16 @@ def calculate_accuracy(threshold, dist, actual_issame):
     fpr = 0 if (fp+tn==0) else float(fp) / float(fp+tn)
     acc = float(tp+tn)/dist.size
     return tpr, fpr, acc
-'''
-def plot_roc(fpr, tpr, label):
-    plt.plot(fpr, tpr, label=label)
-    plt.title('Receiver Operating Characteristics')
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.legend()
-    plt.plot([0, 1], [0, 1], 'g--')
-    plt.grid(True)
-    plt.show()
-'''  
+
+
+  
 def calculate_val(thresholds, embeddings1, embeddings2, actual_issame, far_target, nrof_folds=10):
     assert(embeddings1.shape[0] == embeddings2.shape[0])
     assert(embeddings1.shape[1] == embeddings2.shape[1])
     nrof_pairs = min(len(actual_issame), embeddings1.shape[0])
     nrof_thresholds = len(thresholds)
     k_fold = KFold(n_splits=nrof_folds, shuffle=False)
-
+    
     val = np.zeros(nrof_folds)
     far = np.zeros(nrof_folds)
     
@@ -472,7 +446,7 @@ def calculate_val(thresholds, embeddings1, embeddings2, actual_issame, far_targe
     indices = np.arange(nrof_pairs)
     
     for fold_idx, (train_set, test_set) in enumerate(k_fold.split(indices)):
-  
+      
         # Find the threshold that gives FAR = far_target
         far_train = np.zeros(nrof_thresholds)
         for threshold_idx, threshold in enumerate(thresholds):
@@ -525,4 +499,3 @@ def list_variables(filename):
     variable_map = reader.get_variable_to_shape_map()
     names = sorted(variable_map.keys())
     return names
-  
