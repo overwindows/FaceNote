@@ -156,20 +156,6 @@ def main(args):
         regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         total_loss = tf.add_n([triplet_loss] + regularization_losses, name='total_loss')
 
-        # Create list with variables to restore
-        restore_vars = []
-        update_gradient_vars = []
-        if args.pretrained_model:
-            update_gradient_vars = tf.global_variables()
-            for var in tf.global_variables():
-                if not 'Embeddings/' in var.op.name:
-                    restore_vars.append(var)
-                #else:
-                    #update_gradient_vars.append(var)
-        else:
-            restore_vars = tf.global_variables()
-            update_gradient_vars = tf.global_variables()
-
         # Build a Graph that trains the model with one batch of examples and updates the model parameters
         train_op = facenet.train(total_loss, global_step, args.optimizer, 
             learning_rate, args.moving_average_decay, tf.global_variables())
