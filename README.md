@@ -1,4 +1,4 @@
-## Welcome to Renaissance Pages
+## Welcome to FaceNote Pages
 
 This Project focus on computer vision and artificial intelligence for image enhancement.
 
