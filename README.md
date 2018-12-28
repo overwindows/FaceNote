@@ -10,31 +10,6 @@ The project has three components
 
 3. Image auto-enhancement based on aesthetics analysis
 
-
-### Setup
-Python 2.7
-
-OpenCV 2.4
-
-Tensorflow R1
-
-sklearn
-
-pil
-
-and other relative dependency
-
-###For example
-```
-pip install tensorflow -- upgrade
-
-pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
-
-pip install pillow
-
-pip install sklearn
-```
-
 ## Face
 
 ### Download Training Data
