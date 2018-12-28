@@ -10,7 +10,8 @@ The project has three components
 
 3. Image auto-enhancement based on aesthetics analysis
 
-## Face
+
+## FaceNote
 
 ### Download Training Data
 ```
