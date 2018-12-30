@@ -8,16 +8,16 @@ import cv2
 
 
 files = ['../data/facescrub_actors.txt', '../data/facescrub_actresses.txt']
-RESULT_ROOT = '../../datasets/facescrub'
+RESULT_ROOT = '/mnt/wuchen.wc/datasets/facescrub'
 if not exists(RESULT_ROOT):
     os.mkdir(RESULT_ROOT)
 
 
-def download((names, urls, bboxes)):
+def download(params):
     """
         download from urls into folder names using wget
     """
-
+    names,urls,bboxes = params
     assert(len(names) == len(urls))
     assert(len(names) == len(bboxes))
 
@@ -27,11 +27,11 @@ def download((names, urls, bboxes)):
         directory = join(RESULT_ROOT, names[i])
         if not exists(directory):
             os.mkdir(directory)
-        fname = hashlib.sha1(urls[i]).hexdigest() + '.jpg'
+        fname = hashlib.sha1(urls[i].encode("utf-8")).hexdigest() + '.jpg'
         dst = join(directory, fname)
-        print "downloading", dst
+        print("downloading", dst)
         if exists(dst):
-            print "already downloaded, skipping..."
+            print("already downloaded, skipping...")
             continue
         else:
             res = os.system(CMD % (urls[i], dst))

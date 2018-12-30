@@ -81,10 +81,10 @@ class Network(object):
         session: The current TensorFlow session
         ignore_missing: If true, serialized weights for missing layers are ignored.
         '''
-        data_dict = np.load(data_path).item() #pylint: disable=no-member
+        data_dict = np.load(data_path, encoding="latin1").item() #pylint: disable=no-member
         for op_name in data_dict:
             with tf.variable_scope(op_name, reuse=True):
-                for param_name, data in data_dict[op_name].iteritems():
+                for param_name, data in data_dict[op_name].items():
                     try:
                         var = tf.get_variable(param_name)
                         session.run(var.assign(data))
@@ -99,7 +99,8 @@ class Network(object):
         assert len(args) != 0
         self.terminals = []
         for fed_layer in args:
-            if isinstance(fed_layer, basestring):
+            #print(type(fed_layer))
+            if isinstance(fed_layer, str):
                 try:
                     fed_layer = self.layers[fed_layer]
                 except KeyError:
@@ -504,19 +505,20 @@ def pad(total_boxes, w, h):
     ey = total_boxes[:,3].copy().astype(np.int32)
 
     tmp = np.where(ex>w)
-    edx[tmp] = np.expand_dims(-ex[tmp]+w+tmpw[tmp],1)
+    #print(-ex[tmp]+w+tmpw[tmp])
+    edx[tmp] = np.expand_dims(-ex[tmp]+w+tmpw[tmp],0)
     ex[tmp] = w
     
     tmp = np.where(ey>h)
-    edy[tmp] = np.expand_dims(-ey[tmp]+h+tmph[tmp],1)
+    edy[tmp] = np.expand_dims(-ey[tmp]+h+tmph[tmp],0)
     ey[tmp] = h
 
     tmp = np.where(x<1)
-    dx[tmp] = np.expand_dims(2-x[tmp],1)
+    dx[tmp] = np.expand_dims(2-x[tmp],0)
     x[tmp] = 1
 
     tmp = np.where(y<1)
-    dy[tmp] = np.expand_dims(2-y[tmp],1)
+    dy[tmp] = np.expand_dims(2-y[tmp],0)
     y[tmp] = 1
     
     return dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph
