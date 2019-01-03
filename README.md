@@ -20,6 +20,7 @@ pip3 install -r requirments.txt
 ### Download Training Data
 ```
 python3 facescrub_download.py
+wget http://vis-www.cs.umass.edu/lfw/lfw.tgz
 ```
 
 ### Align Images
