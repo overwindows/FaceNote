@@ -13,9 +13,9 @@ The project has three components
 
 ## FaceNote
 ### Install Requirments
-'''
+```
 pip3 install -r requirments.txt
-'''
+```
 
 ### Download Training Data
 ```
