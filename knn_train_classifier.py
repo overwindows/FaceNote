@@ -3,17 +3,13 @@ from __future__ import division
 from __future__ import print_function
 
 import cv2
-
 from os.path import join as pjoin
 import matplotlib.pyplot as plt
-
-
 import sklearn
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn import metrics  
 from sklearn.externals import joblib
-
 from scipy import misc
 import tensorflow as tf
 import numpy as np
