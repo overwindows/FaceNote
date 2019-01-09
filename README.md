@@ -1,15 +1,16 @@
 ## Welcome to FaceNote Pages
 
-This Project focus on computer vision and artificial intelligence for image enhancement.
+This Project focus on computer vision and artificial intelligence for face searching.
 
-The project has three components
+- OpenCV
+- MTCNN
+- FaceNet
+- Python3
+- TensorFlow 
+
+The project has below components
 
 1. Face detect and search validation
-
-2. Image aesthetics analysis and rating
-
-3. Image auto-enhancement based on aesthetics analysis
-
 
 ## FaceNote
 ### Install Requirments
