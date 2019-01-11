@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-python3 -m facenet.facenet_train_classifier \
+export PYTHONPATH=$PYTHONPATH:./facenote/
+
+python3 -m facenote.facenet_train_classifier \
        	--logs_base_dir ~/logs/facenet/ \
 	--models_base_dir ~/models/facenet/ \
 	--data_dir ~/datasets/facescrub_mtcnnpy_182 \
