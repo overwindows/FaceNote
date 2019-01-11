@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-python3 facenet_train_classifier.py \
+python3 -m facenet.facenet_train_classifier \
        	--logs_base_dir ~/logs/facenet/ \
 	--models_base_dir ~/models/facenet/ \
 	--data_dir ~/datasets/facescrub_mtcnnpy_182 \
