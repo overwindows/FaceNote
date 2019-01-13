@@ -10,8 +10,8 @@ import sys
 import os
 import copy
 import argparse
-from facenet import facenet
-from facenet import detect_face
+from core import facenet
+from core import detect_face
 import random
 
 from os.path import join as pjoin
@@ -59,14 +59,14 @@ def load_and_align_data(image, image_size, margin, gpu_memory_fraction):
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1.0)
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         with sess.as_default():
-            pnet, rnet, onet = detect_face.create_mtcnn(sess, None)
+            pnet, rnet, onet = detect_face.create_mtcnn(sess, './data')
     
     # 读取图片 
     img = image
     # 获取图片的shape
     img_size = np.asarray(img.shape)[0:2]
     # 返回边界框数组 （参数分别是输入图片 脸部最小尺寸 三个网络 阈值 factor不清楚）
-    bounding_boxes, _ = align.detect_face.detect_face(img, minsize, pnet, rnet, onet, threshold, factor)
+    bounding_boxes, _ = detect_face.detect_face(img, minsize, pnet, rnet, onet, threshold, factor)
   
     if len(bounding_boxes) < 1:
         return 0,0,0
@@ -101,8 +101,8 @@ def main(args):
 
     with tf.Graph().as_default():
         with tf.Session() as sess:  
-            # 加载模型
-            facenet.load_model(model_dir)
+            meta_file, ckpt_file = facenet.get_model_filenames(args.model_dir)
+            facenet.load_model(model_dir,meta_file,ckpt_file)
             print('建立facenet embedding模型')
             # 返回给定名称的tensor
             images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
@@ -112,7 +112,7 @@ def main(args):
             model = joblib.load('./models/knn_classifier.model')
 
             #开启ip摄像头
-            video="http://admin:admin@192.168.0.107:8081/"   #此处@后的ipv4 地址需要修改为自己的地址
+            video="http://admin:admin@192.168.8.127:8081/"   #此处@后的ipv4 地址需要修改为自己的地址
             # 参数为0表示打开内置摄像头，参数是视频文件路径则打开视频
             capture =cv2.VideoCapture(video)
             cv2.namedWindow("camera",1)
@@ -152,9 +152,9 @@ def main(args):
 
                         for i in range(len(predict)):
                             if predict[i]==0:
-                                result.append('windzu')
+                                result.append('Chen')
                             elif predict[i]==100:
-                                result.append('unknown')
+                                result.append('Reenie')
 
                         # 绘制矩形框并标注文字
                         for rec_position in range(len(det)):
@@ -193,17 +193,17 @@ def main(args):
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('model_dir', type=str, 
+    parser.add_argument('--model_dir', type=str, 
         help='Directory containing the meta_file and ckpt_file', default='./20170512-110547')
-    parser.add_argument('--dlib_face_predictor', type=str,
-    help='File containing the dlib face predictor.', default='../data/shape_predictor_68_face_landmarks.dat')
-    parser.add_argument('--image_size', type=int,
-        help='Image size (height, width) in pixels.', default=160)
-    parser.add_argument('image_files', type=str, nargs='+', help='Images to compare')
-    parser.add_argument('--margin', type=int,
-        help='Margin for the crop around the bounding box (height, width) in pixels.', default=44)
-    parser.add_argument('--gpu_memory_fraction', type=float,
-        help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
+    #parser.add_argument('--dlib_face_predictor', type=str,
+    #help='File containing the dlib face predictor.', default='../data/shape_predictor_68_face_landmarks.dat')
+    #parser.add_argument('--image_size', type=int,
+    #    help='Image size (height, width) in pixels.', default=160)
+    #parser.add_argument('image_files', type=str, nargs='+', help='Images to compare')
+    #parser.add_argument('--margin', type=int,
+    #    help='Margin for the crop around the bounding box (height, width) in pixels.', default=44)
+    #parser.add_argument('--gpu_memory_fraction', type=float,
+    #    help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
     return parser.parse_args(argv)
 
 if __name__ == '__main__':
