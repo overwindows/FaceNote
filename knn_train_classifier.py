@@ -138,7 +138,7 @@ def main(args):
                     # print(type(emb))
 
                     for xx in range(len(emb)):
-                        print(type(emb[xx, :]), emb[xx, :].shape)
+                        #print(type(emb[xx, :]), emb[xx, :].shape)
                         train_x.append(emb[xx, :])
                         train_y.append(0)
             # print(len(train_x))
