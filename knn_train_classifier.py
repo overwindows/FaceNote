@@ -22,7 +22,7 @@ import core.detect_face as detect_face
 
 
 def load_and_align_data(image, image_size, margin, gpu_memory_fraction):
-    print('Creating networks and loading parameters')
+    #print('Creating networks and loading parameters')
     with tf.Graph().as_default():
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1.0)
         sess = tf.Session(config=tf.ConfigProto(
@@ -81,10 +81,8 @@ def to_rgb(img):
 
 
 def load_data(data_dir):
-
     # data为字典类型 key对应人物分类 value为读取的一个人的所有图片 类型为ndarray
     data = {}
-    pics_ctr = 0
     for guy in os.listdir(data_dir):
         person_dir = pjoin(data_dir, guy)
         curr_pics = [read_img(person_dir, f) for f in os.listdir(person_dir)]
@@ -137,13 +135,13 @@ def main(args):
                     feed_dict = {images_placeholder: images_me,
                                  phase_train_placeholder: False}
                     emb = sess.run(embeddings, feed_dict=feed_dict)
-                    print(type(emb))
+                    # print(type(emb))
 
                     for xx in range(len(emb)):
                         print(type(emb[xx, :]), emb[xx, :].shape)
                         train_x.append(emb[xx, :])
                         train_y.append(0)
-            print(len(train_x))
+            # print(len(train_x))
 
             for y in data[keys[1]]:
                 _, images_others, j = load_and_align_data(y, 160, 44, 1.0)
@@ -152,23 +150,23 @@ def main(args):
                                  phase_train_placeholder: False}
                     emb = sess.run(embeddings, feed_dict=feed_dict)
                     for xx in range(len(emb)):
-                        print(type(emb[xx, :]), emb[xx, :].shape)
+                        #print(type(emb[xx, :]), emb[xx, :].shape)
                         train_x.append(emb[xx, :])
-                        train_y.append(100)
-            print(len(train_x))
+                        train_y.append(1)
+            # print(len(train_x))
 
             print('搞完了，样本数为：{}'.format(len(train_x)))
 
     train_x = np.array(train_x)
-    print(train_x.shape)
+    # print(train_x.shape)
     train_x = train_x.reshape(-1, 128)
     train_y = np.array(train_y)
-    print(train_x.shape)
-    print(train_y.shape)
+    # print(train_x.shape)
+    # print(train_y.shape)
 
     X_train, X_test, y_train, y_test = train_test_split(
         train_x, train_y, test_size=.3, random_state=42)
-    print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
+    #print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
     classifiers = knn_classifier
 
@@ -203,12 +201,12 @@ def parse_arguments(argv):
                         help='Directory containing the meta_file and ckpt_file', default='./20170512-110547')
     # parser.add_argument('--dlib_face_predictor', type=str,
     # help='File containing the dlib face predictor.', default='../data/shape_predictor_68_face_landmarks.dat')
-    # parser.add_argument('--image_size', type=int,
-    #    help='Image size (height, width) in pixels.', default=160)
+    parser.add_argument('--image_size', type=int,
+        help='Image size (height, width) in pixels.', default=160)
     parser.add_argument('--train_dir', type=str,
                         help='Directory containing the training file.')
-    # parser.add_argument('--margin', type=int,
-    #    help='Margin for the crop around the bounding box (height, width) in pixels.', default=44)
+    parser.add_argument('--margin', type=int,
+        help='Margin for the crop around the bounding box (height, width) in pixels.', default=44)
     # parser.add_argument('--gpu_memory_fraction', type=float,
     #    help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
     return parser.parse_args(argv)

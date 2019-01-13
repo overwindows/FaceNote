@@ -81,7 +81,6 @@ def main(args):
             
             
 def load_and_align_data(image_paths, image_size, margin, gpu_memory_fraction):
-
     minsize = 20 # minimum size of face
     threshold = [ 0.6, 0.7, 0.7 ]  # three steps's threshold
     factor = 0.709 # scale factor
@@ -95,7 +94,7 @@ def load_and_align_data(image_paths, image_size, margin, gpu_memory_fraction):
   
     nrof_samples = len(image_paths)
     img_list = [None] * nrof_samples
-    for i in xrange(nrof_samples):
+    for i in range(nrof_samples):
         img = misc.imread(os.path.expanduser(image_paths[i]))
         img_size = np.asarray(img.shape)[0:2]
         bounding_boxes, _ = detect_face.detect_face(img, minsize, pnet, rnet, onet, threshold, factor)
@@ -115,13 +114,13 @@ def load_and_align_data(image_paths, image_size, margin, gpu_memory_fraction):
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('model_dir', type=str, 
+    parser.add_argument('--model_dir', type=str, 
         help='Directory containing the meta_file and ckpt_file')
-    parser.add_argument('--dlib_face_predictor', type=str,
-    help='File containing the dlib face predictor.', default='../data/shape_predictor_68_face_landmarks.dat')
+    #parser.add_argument('--dlib_face_predictor', type=str,
+    #help='File containing the dlib face predictor.', default='../data/shape_predictor_68_face_landmarks.dat')
     parser.add_argument('--image_size', type=int,
         help='Image size (height, width) in pixels.', default=160)
-    parser.add_argument('image_files', type=str, nargs='+', help='Images to compare')
+    parser.add_argument('--image_files', type=str, nargs='+', help='Images to compare')
     parser.add_argument('--margin', type=int,
         help='Margin for the crop around the bounding box (height, width) in pixels.', default=44)
     parser.add_argument('--gpu_memory_fraction', type=float,
