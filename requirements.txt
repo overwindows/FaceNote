@@ -1,2 +1,5 @@
 matplotlib
 opencv-python
+sklearn
+scipy
+Pillow
