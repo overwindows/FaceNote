@@ -153,7 +153,7 @@ def main(args):
                         for i in range(len(predict)):
                             if predict[i]==0:
                                 result.append('Chen')
-                            elif predict[i]==100:
+                            elif predict[i]==1:
                                 result.append('Reenie')
 
                         # 绘制矩形框并标注文字
