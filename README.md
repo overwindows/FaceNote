@@ -82,4 +82,5 @@ sudo mount -t cifs -o username=Minerva,password=sesame,vers=1.0 //192.168.8.1/sd
 sudo mount -o uid=pi,gid=pi /dev/sda1 /mnt/usb_flash
 ```
 Having trouble with [OpenCV](https://www.cnblogs.com/zjutlitao/p/8261688.html)?
+
 Having trouble with [SciPy](https://raspberrypi.stackexchange.com/questions/8308/how-to-install-latest-scipy-version-on-raspberry-pi)?
