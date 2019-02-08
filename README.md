@@ -78,7 +78,7 @@ Having trouble with Pages? Check out our [documentation](https://help.github.com
 
 ### Raspberry
 ```
-sudo mount -t cifs -o username=Minerva,password=sesame //192.168.8.1/sda2 /mnt/net_disk
+sudo mount -t cifs -o username=Minerva,password=sesame,vers=1.0 //192.168.8.1/sda2 /mnt/net_disk
 sudo mount -o uid=pi,gid=pi /dev/sda1 /mnt/usb_flash
 ```
 Install [OpenCV](https://www.cnblogs.com/zjutlitao/p/8261688.html)
