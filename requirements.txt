@@ -1,5 +1,6 @@
 matplotlib
-opencv-python
 sklearn
 scipy
 Pillow
+opencv-python
+
