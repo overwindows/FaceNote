@@ -42,7 +42,14 @@ For example:
 
 ~/tmp/models/facenet/20170223-125024/model-20170223-125024.ckpt-0
 
-<div style='display: none'>
+### Raspberry
+```
+sudo mount -t cifs -o username=Minerva,password=sesame,vers=1.0 //192.168.8.1/sda2 /mnt/net_disk
+sudo mount -o uid=pi,gid=pi /dev/sda1 /mnt/usb_flash
+```
+Having trouble with [OpenCV](https://www.cnblogs.com/zjutlitao/p/8261688.html)?
+Having trouble with [SciPy](https://raspberrypi.stackexchange.com/questions/8308/how-to-install-latest-scipy-version-on-raspberry-pi)?
+
 ### Image Embedding
 
 
@@ -75,11 +82,5 @@ Your Pages site will use the layout and styles from the Jekyll theme you have se
 ### Support or Contact
 
 Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
-</div>
-### Raspberry
-```
-sudo mount -t cifs -o username=Minerva,password=sesame,vers=1.0 //192.168.8.1/sda2 /mnt/net_disk
-sudo mount -o uid=pi,gid=pi /dev/sda1 /mnt/usb_flash
-```
-Having trouble with [OpenCV](https://www.cnblogs.com/zjutlitao/p/8261688.html)?
-Having trouble with [SciPy](https://raspberrypi.stackexchange.com/questions/8308/how-to-install-latest-scipy-version-on-raspberry-pi)?
+
+
