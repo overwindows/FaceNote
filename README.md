@@ -52,36 +52,36 @@ sudo mount -o uid=pi,gid=pi /dev/sda1 /mnt/usb_flash
 Having trouble with [OpenCV](https://www.cnblogs.com/zjutlitao/p/8261688.html)?
 Having trouble with [SciPy](https://raspberrypi.stackexchange.com/questions/8308/how-to-install-latest-scipy-version-on-raspberry-pi)?
 
->### Image Embedding
+<!--### Image Embedding-->
 
 
->### Markdown
+<!--### Markdown-->
 
->Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+<!--Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for-->
 
->```markdown
->Syntax highlighted code block
+<!--```markdown
+Syntax highlighted code block-->
 
-># Header 1
->## Header 2
->### Header 3
+<!--# Header 1
+## Header 2
+### Header 3-->
 
->- Bulleted
->- List
+<!-- Bulleted
+- List-->
 
->1. Numbered
->2. List
+<!--1. Numbered
+2. List-->
 
->**Bold** and _Italic_ and `Code` text
+<!--**Bold** and _Italic_ and `Code` text-->
 
->[Link](url) and ![Image](src)
->```
+<!--[Link](url) and ![Image](src)
+```-->
 
->For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+<!--For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).-->
 
->Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/overwindows/renaissance/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+<!--Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/overwindows/renaissance/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.-->
 
-### Support or Contact
+<!--### Support or Contact-->
 
 <!--Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.-->
 
