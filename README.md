@@ -6,7 +6,7 @@ This Project focus on computer vision and artificial intelligence for face searc
 - MTCNN
 - FaceNet
 - Python3
-- TensorFlow 1.X
+- TensorFlow 1.10
 
 The project has below components
 
