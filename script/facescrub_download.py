@@ -8,7 +8,7 @@ import cv2
 
 
 files = ['../data/facescrub_actors.txt', '../data/facescrub_actresses.txt']
-RESULT_ROOT = '/mnt/wuchen.wc/datasets/facescrub'
+RESULT_ROOT = '/home/wuchen/datasets/facescrub'
 if not exists(RESULT_ROOT):
     os.mkdir(RESULT_ROOT)
 

@@ -15,12 +15,12 @@ The project has below components
 ## FaceNote
 ### Install Requirments
 ```
-pip3 install -r requirments.txt
+pip3 install -r requirementres.txt
 ```
 
 ### Download Training Data
 ```
-python3 facescrub_download.py
+python3 script/facescrub_download.py
 wget http://vis-www.cs.umass.edu/lfw/lfw.tgz
 ```
 
