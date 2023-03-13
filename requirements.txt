@@ -3,4 +3,4 @@ sklearn
 scipy==1.2.1
 Pillow
 opencv-python
-numpy==1.16.2
+numpy==1.22.0
