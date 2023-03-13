@@ -8,7 +8,7 @@ import cv2
 
 
 files = ['../data/facescrub_actors.txt', '../data/facescrub_actresses.txt']
-RESULT_ROOT = '/Volumes/CIKM2016/datasets/facescrub'
+RESULT_ROOT = '/Volumes/FaceNote/datasets/facescrub'
 if not exists(RESULT_ROOT):
     os.mkdir(RESULT_ROOT)
 
@@ -17,9 +17,9 @@ def download(params):
     """
         download from urls into folder names using wget
     """
-    names,urls,bboxes = params
-    assert(len(names) == len(urls))
-    assert(len(names) == len(bboxes))
+    names, urls, bboxes = params
+    assert (len(names) == len(urls))
+    assert (len(names) == len(bboxes))
 
     # download using external wget
     CMD = 'wget -c -t 1 -T 3 "%s" -O "%s"'
@@ -46,11 +46,19 @@ def download(params):
         else:
             face_path = join(face_directory, fname)
             face = img[bboxes[i][1]:bboxes[i][3], bboxes[i][0]:bboxes[i][2]]
-            cv2.imwrite(face_path, face)
-            # write bbox to file
-            with open(join(directory,'_bboxes.txt'), 'a') as fd:
-                bbox_str = ','.join([str(_) for _ in bboxes[i]])
-                fd.write('%s %s\n' % (fname, bbox_str))
+            if face is None:
+                os.remove(dst)
+                print('Image empty!')
+            else:
+                try:
+                    cv2.imwrite(face_path, face)
+                    # write bbox to file
+                    with open(join(directory, '_bboxes.txt'), 'a') as fd:
+                        bbox_str = ','.join([str(_) for _ in bboxes[i]])
+                        fd.write('%s %s\n' % (fname, bbox_str))
+                except:
+                    print("An exception occurred {}".format(dst))
+                    os.remove(dst)
 
 
 if __name__ == '__main__':
@@ -63,7 +71,7 @@ if __name__ == '__main__':
             bboxes = []
             for line in fd.readlines():
                 components = line.split('\t')
-                assert(len(components) == 6)
+                assert (len(components) == 6)
                 name = components[0].replace(' ', '_')
                 url = components[3]
                 bbox = [int(_) for _ in components[4].split(',')]
