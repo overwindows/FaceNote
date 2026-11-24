@@ -1,6 +1,6 @@
 matplotlib
 sklearn
-scipy==1.2.1
+scipy==1.10.0
 Pillow
 opencv-python
 numpy==1.16.2
