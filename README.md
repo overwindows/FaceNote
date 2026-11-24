@@ -1,90 +1,89 @@
-## Welcome to FaceNote Pages
+# FaceNote
 
-This Project focus on computer vision and artificial intelligence for face searching.
+FaceNote is an experimental face-recognition project built around the FaceNet embedding model and MTCNN face detection. It includes scripts for aligning image datasets, training classifiers, and identifying faces from a camera or video stream.
 
-- OpenCV
-- MTCNN
-- FaceNet
-- Python3
-- TensorFlow 1.10
+## How it works
 
-The project has below components
+1. MTCNN detects and aligns faces in images.
+2. FaceNet converts each face into a 128-dimensional embedding.
+3. A classifier uses those embeddings to assign identities. The camera demo currently uses a scikit-learn K-nearest-neighbors (KNN) model.
 
-1. Face detect and search validation
+## Requirements
 
-## FaceNote
-### Install Requirments
-```
-pip3 install -r requirements.txt
-```
+This repository uses a legacy Python and TensorFlow stack. The checked-in `requirements.txt` pins NumPy 1.16.2 and SciPy 1.2.1, but does **not** install TensorFlow. The original project targeted TensorFlow 1.10; several dependencies and APIs used by the code are no longer available in current releases. Set up a compatible, isolated environment rather than installing these dependencies into a modern Python environment, and install the compatible TensorFlow version separately.
 
-### Download Training Data
-```
-python3 script/facescrub_download.py
-wget http://vis-www.cs.umass.edu/lfw/lfw.tgz
+Install the listed packages from the repository root:
+
+```bash
+python3 -m pip install -r requirements.txt
 ```
 
-### Align Images
-```
-python3 align_dataset_mtcnn.py ~/datasets/lfw/ ~/datasets/lfw_mtcnnalign_160 --image_size 160 --margin 32
-python3 align_dataset_mtcnn.py ~/datasets/facescrub/ ~/datasets/facescrub_mtcnnpy_182 --image_size 182 --margin 44
-```
+The repository does not include trained FaceNet checkpoints or a trained KNN classifier. Obtain a compatible FaceNet model separately and provide its directory when running the scripts.
 
-### Training classifier
-```
-sh train_facenote.sh
-``` 
-~~```python3 facenet_train_classifier.py --logs_base_dir ~/logs/facenet/ --models_base_dir ~/models/facenet/ --data_dir ~/datasets/facescrub_mtcnnpy_182 --image_size 160 --model_def inception_resnet_v1 --lfw_dir  ~/datasets/lfw_mtcnnalign_160 --optimizer RMSPROP --learning_rate -1 --max_nrof_epochs 200 --keep_probability 0.8 --random_crop --random_flip --learning_rate_schedule_file ../data/learning_rate_schedule_classifier.txt --weight_decay 5e-5 --center_loss_factor 1e-4 --center_loss_alfa 0.9 --batch_size 70 --epoch_size 100```~~
+## Prepare image data
 
-If you have a pre-trained model, please add the --pretrained_model in the above command.
-```
---pretrained_model $pretrained_model_name
+The alignment script expects an input directory organized into one subdirectory per identity, and writes aligned face images in the same class-folder layout. For example, after downloading and extracting LFW:
+
+```bash
+mkdir -p ~/datasets
+wget -O ~/datasets/lfw.tgz http://vis-www.cs.umass.edu/lfw/lfw.tgz
+tar -xzf ~/datasets/lfw.tgz -C ~/datasets
 ```
 
-For example:
+Run the aligner from `core/` so its relative reference to the bundled MTCNN data resolves correctly:
+
+```bash
+cd core
+python3 align_dataset_mtcnn.py ~/datasets/lfw ~/datasets/lfw_mtcnnalign_160 --image_size 160 --margin 32
+cd ..
 ```
-~/tmp/models/facenet/20170223-125024/model-20170223-125024.ckpt-0
+
+For FaceScrub, `script/facescrub_download.py` downloads images using the metadata files under `data/`. The downloader writes to `../datasets/facescrub` relative to the current working directory; check that location and the dataset's terms before running it. Align the downloaded images in the same way, using a path that matches where the data was saved.
+
+## Train a FaceNet classifier
+
+`train_facenote.sh` runs `core.facenet_train_classifier` with the FaceScrub and LFW datasets. Before running it, edit the dataset, log, model, and pretrained-checkpoint paths in the script to match your local setup. The referenced checkpoint is not included in this repository.
+
+```bash
+bash train_facenote.sh
 ```
 
-### Raspberry
+## Train the KNN model used by the demo
+
+The KNN training script expects a training directory with **exactly two identity subdirectories**. Update the paths in `train_classifier.sh`, or run the script directly:
+
+```bash
+python3 knn_train_classifier.py \
+  --model_dir ~/models/facenet/20190114-154656/ \
+  --train_dir ~/data/facenote/sample/
 ```
-sudo mount -t cifs -o username=Minerva,password=sesame,vers=1.0 //192.168.8.1/sda2 /mnt/net_disk
-sudo mount -o uid=pi,gid=pi /dev/sda1 /mnt/usb_flash
+
+It saves the classifier to `models/knn_classifier.model`. The training code assigns numeric labels according to the directory listing order; the demo maps label `0` to `Chen` and label `1` to `Reenie`. Use matching identities or update that mapping in `facenote.py`.
+
+## Run the camera demo
+
+After training or placing the KNN model at `models/knn_classifier.model` and supplying a compatible FaceNet checkpoint, run:
+
+```bash
+bash run_demo.sh
 ```
-Having trouble with [OpenCV](https://www.cnblogs.com/zjutlitao/p/8261688.html)?
-Having trouble with [SciPy](https://raspberrypi.stackexchange.com/questions/8308/how-to-install-latest-scipy-version-on-raspberry-pi)?
 
-<!--### Image Embedding-->
+`run_demo.sh` points to `~/models/facenet/20190114-154656/`; edit it if your checkpoint is elsewhere. The video source is currently hard-coded in `facenote.py` as an IP-camera URL. Replace it with your camera, video file, or stream before running, and keep any camera credentials private. Press **Esc** to exit; press **Space** to save the current frame.
 
+## Repository layout
 
-<!--### Markdown-->
+| Path | Purpose |
+| --- | --- |
+| `facenote.py` | Face recognition demo for a camera/video stream |
+| `knn_train_classifier.py` | Creates the KNN identity classifier used by the demo |
+| `core/` | FaceNet utilities, MTCNN detection, alignment, training, and validation |
+| `data/` | MTCNN detector weights and dataset/training metadata |
+| `models/` | Network definitions; trained model artifacts are not included |
+| `script/` | Dataset download and preparation utilities |
+| `train_facenote.sh` | FaceNet classifier training command |
+| `train_classifier.sh` | KNN training command |
+| `run_demo.sh` | Camera demo launch command |
 
-<!--Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for-->
+## Limitations
 
-<!--```markdown
-Syntax highlighted code block-->
-
-<!--# Header 1
-## Header 2
-### Header 3-->
-
-<!-- Bulleted
-- List-->
-
-<!--1. Numbered
-2. List-->
-
-<!--**Bold** and _Italic_ and `Code` text-->
-
-<!--[Link](url) and ![Image](src)
-```-->
-
-<!--For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).-->
-
-<!--Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/overwindows/renaissance/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.-->
-
-<!--### Support or Contact-->
-
-<!--Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.-->
-
-
+This is a research prototype with legacy dependencies and paths that need local configuration. Face-recognition results depend on the quality and compatibility of the model, training data, and camera input. Use only images and biometric data you are authorized to process, and obtain consent where required.
